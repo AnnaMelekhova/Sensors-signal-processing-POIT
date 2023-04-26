@@ -3,7 +3,8 @@ from flask import Flask, render_template, session, request, jsonify, url_for
 from flask_socketio import SocketIO, emit, disconnect    
 import time
 import random
-import math 
+import json
+import serial
 async_mode = None
 import MySQLdb 
 import configparser as ConfigParser
@@ -24,12 +25,16 @@ socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock() 
 
+#ser = serial.Serial("/dev/ttyS0")
+#ser.baudrate = 9600
+#ser.flushInput()
 
 def background_thread(args):
     count = 0    
     dataCounter = 0
     # db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
-    dataList = []          
+    dataList = []
+    i = 0
     while True:
         if args:
           A = dict(args).get('A')
@@ -39,19 +44,31 @@ def background_thread(args):
           btnV = 'null' 
         
         socketio.sleep(2)
-        count += 1
-        prem = int(A)*math.sin(time.time())
-        prem2 = int(A)*math.cos(time.time())
+        
+        ###############SENSOR DATA#####################
+        #line = ser.readline().decode('utf-8').rstrip()
+        #data = json.loads(line)
+        ###############SENSOR DATA#####################
+        
+        ###############TEST DATA######################
+        f = open('dummydata.json')
+        line = json.load(f)
+        data = line[i]
+        ###############TEST DATA######################
+        temp = data['temperature']
+        hum = data['humidity']
+        dist = data['distance']
+        ir = data['ir']
         
         dataDict = {
-          "t": time.time(),
-          "x": count,
-          "y": float(A)*prem,
-          "cs": float(A)*prem2}
+             "t": temp,
+             "h": hum,
+             "d": dist,
+             "ir": ir}
         dataList.append(dataDict)
+        
+        i = i+1
         if len(dataList)>0:
-          print(str(dataList))
-          print(str(dataList).replace("'", "\""))
         socketio.emit('my_response',
                       {'data': dataDict, 'count': count},
                       namespace='/test')  
