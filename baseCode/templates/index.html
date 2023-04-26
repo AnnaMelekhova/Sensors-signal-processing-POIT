@@ -42,8 +42,9 @@
       
       $(document).ready(function() {    
       var x = new Array();
-      var y = new Array();
-      var cosin = new Array();
+      var t = new Array();
+      var h = new Array();
+      var d = new Array();
       var trace;
       var layout;
       
@@ -60,18 +61,24 @@
         //console.log(msg.data);
         //$('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html(); 
         x.push(parseFloat(msg.count));
-        y.push(parseFloat(msg.data.y));
-        cosin.push(parseFloat(msg.data.cs))
+        t.push(parseFloat(msg.data.t));
+        h.push(parseFloat(msg.data.h));
+        d.push(parseFloat(msg.data.d))
         trace1 = {
             x: x,
-            y: y,
-            name: 'sin'
+            y: t,
+            name: 'temperature'
         };  
         trace2= {
             x: x,
-            y: cosin,
-            name: 'cos'
-        };       
+            y: h,
+            name: 'humidity'
+        };      
+        trace3= {
+            x: x,
+            y: d,
+            name: 'distance'
+        };  
         layout = {
           title: 'Data',
           xaxis: {
@@ -86,6 +93,7 @@
         var traces = new Array();
         traces.push(trace1);
         traces.push(trace2);
+        traces.push(trace3);
         Plotly.newPlot($('#plotdiv')[0], traces, layout); 
         //addTraces               
         });

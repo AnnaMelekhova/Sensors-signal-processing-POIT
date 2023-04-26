@@ -44,7 +44,7 @@ def background_thread(args):
           btnV = 'null' 
         
         socketio.sleep(2)
-        
+        count +=1
         ###############SENSOR DATA#####################
         #line = ser.readline().decode('utf-8').rstrip()
         #data = json.loads(line)
@@ -61,6 +61,7 @@ def background_thread(args):
         ir = data['ir']
         
         dataDict = {
+             "time": count,
              "t": temp,
              "h": hum,
              "d": dist,
@@ -69,9 +70,11 @@ def background_thread(args):
         
         i = i+1
         if len(dataList)>0:
+            print(str(dataList))
+            print(str(dataList).replace("'", "\""))
         socketio.emit('my_response',
                       {'data': dataDict, 'count': count},
-                      namespace='/test')  
+                      namespace='/test')
 
 @app.route('/')
 def index():
