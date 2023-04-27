@@ -89,14 +89,13 @@
               //range: [-1,1]
           }
         };
-        //console.log(trace);
         var traces = new Array();
         traces.push(trace1);
         traces.push(trace2);
         traces.push(trace3);
         Plotly.newPlot($('#plotdiv')[0], traces, layout); 
         //addTraces               
-        });
+        
       
       // gauge  
       var gauge = new RadialGauge({
@@ -188,7 +187,7 @@
       gauge2.draw();
       gauge.value = msg.data.t;
       gauge2.value = msg.data.h;
-            
+        });
       });
       
       $( function() {
