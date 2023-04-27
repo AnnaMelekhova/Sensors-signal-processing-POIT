@@ -12,6 +12,7 @@
    <script type="text/javascript" charset="utf-8">
     let isOn = false;
      $(document).ready(function() {
+       // data
       console.log("READY")
       namespace = '/test';
       var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
@@ -38,9 +39,8 @@
       $('form#disconnect').submit(function(event) {
           socket.emit('disconnect_request');
           return false; });         
-      });
       
-      $(document).ready(function() {    
+      // graph
       var x = new Array();
       var t = new Array();
       var h = new Array();
@@ -97,57 +97,34 @@
         Plotly.newPlot($('#plotdiv')[0], traces, layout); 
         //addTraces               
         });
-
-      $('form#emit').submit(function(event) {
-          socket.emit('my_event', {value: $('#emit_value').val()});
-          return false; });
-      $('#buttonVal').click(function(event) {
-          //console.log($('#buttonVal').val());
-          socket.emit('click_event', {value: $('#buttonVal').val()});
-          return false; });
-      $('form#disconnect').submit(function(event) {
-          socket.emit('disconnect_request');
-          return false; });         
-      });
       
-      
-      $(document).ready(function() {    
+      // gauge  
       var gauge = new RadialGauge({
-          renderTo: 'canvasID',
+          renderTo: 'canvas1',
           width: 300,
           height: 300,
-          units: "Km/h",
-          minValue: -1,
-          maxValue: 1,
+          units: "°C",
+          minValue: 0,
+          maxValue: 50,
           majorTicks: [
-              "-1.0",
-              "-0.9",
-              "-0.8",
-              "-0.7",
-              "-0.6",
-              "-0.5",
-              "-0.4",
-              "-0.3",
-              "-0.2",
-              "-0.1",
               "0",
-              "0.1",
-              "0.2",
-              "0.3",
-              "0.4",
-              "0.5",
-              "0.6",
-              "0.7",
-              "0.8",
-              "0.9",
-              "1.0"
+              "5",
+              "10",
+              "15",
+              "20",
+              "25",
+              "30",
+              "35",
+              "40",
+              "45",
+              "50"
           ],
           minorTicks: 2,
           strokeTicks: true,
           highlights: [
               {
-                  "from": 0.5,
-                  "to": 1,
+                  "from": 35,
+                  "to": 50,
                   "color": "rgba(200, 50, 50, .75)"
               }
           ],
@@ -162,32 +139,56 @@
           animationDuration: 1500,
           animationRule: "linear"
       });
-      gauge.draw();
-      gauge.value = "0";
-
       
-      namespace = '/test';
-      var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
-
-      socket.on('connect', function() {
-        socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
-
-      socket.on('my_response', function(msg) {
-        console.log(msg.data);
-        $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html(); 
-        gauge.value = msg.data.y;                
-        });
-
-      $('form#emit').submit(function(event) {
-          socket.emit('my_event', {value: $('#emit_value').val()});
-          return false; });
-      $('#buttonVal').click(function(event) {
-          //console.log($('#buttonVal').val());
-          socket.emit('click_event', {value: $('#buttonVal').val()});
-          return false; });
-      $('form#disconnect').submit(function(event) {
-          socket.emit('disconnect_request');
-          return false; });         
+      var gauge2 = new RadialGauge({
+          renderTo: 'canvas2',
+          width: 300,
+          height: 300,
+          units: "%",
+          minValue: 0,
+          maxValue: 100,
+          majorTicks: [
+              "0",
+              "5",
+              "10",
+              "15",
+              "20",
+              "25",
+              "30",
+              "35",
+              "40",
+              "45",
+              "50",
+              "55",
+              "60",
+              "65",
+              "70",
+              "75",
+              "80",
+              "85",
+              "90",
+              "95",
+              "100"
+          ],
+          minorTicks: 2,
+          strokeTicks: true,
+          colorPlate: "#fff",
+          borderShadowWidth: 0,
+          borders: false,
+          needleType: "arrow",
+          needleWidth: 2,
+          needleCircleSize: 7,
+          needleCircleOuter: true,
+          needleCircleInner: false,
+          animationDuration: 1500,
+          animationRule: "linear"
+      });
+      
+      gauge.draw();
+      gauge2.draw();
+      gauge.value = msg.data.t;
+      gauge2.value = msg.data.h;
+            
       });
       
       $( function() {
@@ -197,49 +198,88 @@
       } );
     </script>
  </head>
-<header><h1>Flask-SocketIO Test</h1></header>
+<header><h1>Sensors signal processing</h1></header>
  <body>
    
    <div id="tabs">
       <ul>
-        <li><a href="#tabs-1">Buttons</a></li>
+        <li><a href="#tabs-1">Data</a></li>
         <li><a href="#tabs-2">Graph</a></li>
         <li><a href="#tabs-3">Gauge</a></li>
+        <li><a href="#tabs-4">Database</a></li>
+        <li><a href="#tabs-5">Folder</a></li>
       </ul>
       
       <div id="tabs-1">
+<!--
         <h2>Send:</h2>
         <form id="emit" method="POST" action='#'>
           <input type="text" name="emit_value" id="emit_value" placeholder="Amplituda">
           <input type="submit" value="Send">
         </form>
         <button id="buttonVal" type="submit" value="send">Send value</button>
+-->
         <form id="disconnect" method="POST" action="#">
           <input type="submit" value="Disconnect">
         </form> 
-        <button id="on">Start</button>
-        <h2>Receive:</h2>
+        <button id="on">Start saving data</button>
+        <h2>Received:</h2>
         <div id="json_response"></div>
       </div>
       <div id="tabs-2">
+<!--
         <h2>Send:</h2>
         <form id="emit" method="POST" action='#'>
           <input type="text" name="emit_value" id="emit_value" placeholder="Amplituda">
           <input type="submit" value="Send">
         </form>
         <button id="buttonVal" type="submit" value="send">Send value</button>
+-->
+<!--
         <form id="disconnect" method="POST" action="#">
           <input type="submit" value="Disconnect">
         </form> 
+-->
+        <h2>Live graph:</h2>
         <div id="plotdiv" style="width:600px;height:250px;"></div>
 
       </div>
       <div id="tabs-3">
+<!--
         <form id="disconnect" method="POST" action="#">
           <input type="submit" value="Disconnect">
         </form> 
+-->
+        <h2>Live gauge:</h2>
+<!--
         <canvas id="canvasID"></canvas>
+-->
+        <div style="display:flex">
+          <canvas id="canvas1" width="300" height="300"></canvas>
+          <canvas id="canvas2" width="300" height="300"></canvas>
+        </div>
         
+      </div>
+      <div id="tabs-4">
+        <h2>Find by ID in DB:</h2>
+        <form id="emitDB" method="POST" action='#'>
+          <input type="text" name="emitDB_value" id="emitDB_value" placeholder="ID">
+          <input type="submit" value="Send">
+        </form>
+        <h2>Received:</h2>
+        <div id="DB_response"></div>
+      
+      </div>
+      
+      <div id="tabs-5">
+        <h2>Find by ID in file:</h2>
+        <form id="emitFile" method="POST" action='#'>
+          <input type="text" name="emitFile_value" id="emitFile_value" placeholder="ID">
+          <input type="submit" value="Send">
+        </form>
+        <h2>Received:</h2>
+        <div id="File_response"></div>
+      
       </div>
     </div>
    
@@ -258,7 +298,7 @@
           isOn = true;
         }
         else {
-          button.textContent = "Start";
+          button.textContent = "Start saving data";
           isOn = false;
         }
       });

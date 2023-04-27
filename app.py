@@ -25,9 +25,9 @@ socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock() 
 
-#ser = serial.Serial("/dev/ttyS0")
-#ser.baudrate = 9600
-#ser.flushInput()
+ser = serial.Serial("/dev/ttyS0")
+ser.baudrate = 9600
+ser.flushInput()
 
 def background_thread(args):
     count = 0    
@@ -46,14 +46,14 @@ def background_thread(args):
         socketio.sleep(2)
         count +=1
         ###############SENSOR DATA#####################
-        #line = ser.readline().decode('utf-8').rstrip()
-        #data = json.loads(line)
+        line = ser.readline().decode('utf-8').rstrip()
+        data = json.loads(line)
         ###############SENSOR DATA#####################
         
         ###############TEST DATA######################
-        f = open('dummydata.json')
-        line = json.load(f)
-        data = line[i]
+        #f = open('dummydata.json')
+        #line = json.load(f)
+        #data = line[i]
         ###############TEST DATA######################
         temp = data['temperature']
         hum = data['humidity']
