@@ -13,7 +13,7 @@
     let monitoringButton = false;
     let clickCount = 0;
     var socket;
-
+    let fileParsed;
      $(document).ready(function() {
        // data
     $('#file_submit').prop('disabled', true);
@@ -52,10 +52,46 @@
 
 
       socket.on('file_response', function(msg) {
-        console.log(msg);
+        $('#file_response').html("");
         $('#file_response').append('JSON response: '+': '+JSON.stringify(msg.data, null,2)+'<br>').html; 
+        fileParsed = JSON.parse(JSON.stringify(msg.data, null,2));
+        console.log(fileParsed);
+        const timeData = fileParsed.map((d) => d.time);
+        const tData = fileParsed.map((d) => d.t);
+        const hData = fileParsed.map((d) => d.h);
+        const dData = fileParsed.map((d) => d.d);
         
-        })
+        trace1 = {
+            x: timeData,
+            y: tData,
+            name: 'temperature'
+        };  
+        trace2= {
+            x: timeData,
+            y: hData,
+            name: 'humidity'
+        };      
+        trace3= {
+            x: timeData,
+            y: dData,
+            name: 'distance'
+        };  
+        layout = {
+          title: 'Data',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y'
+          }
+        };
+        var traces = new Array();
+        traces.push(trace1);
+        traces.push(trace2);
+        traces.push(trace3);
+        Plotly.newPlot($('#filePlot')[0], traces, layout); 
+     
+      })
       socket.on('my_response', function(msg) {
         $('#json_response').append('JSON response: '+': '+JSON.stringify(msg.data, null,2)+'<br>').html; 
         
@@ -79,20 +115,31 @@
             name: 'distance'
         };  
         layout = {
-          title: 'Data',
+          title: 'Temperature & Humidity',
           xaxis: {
               title: 'x',
           },
           yaxis: {
-              title: 'y',
-              //range: [-1,1]
+              title: 'y'
+          }
+        };
+        
+        layout2 = {
+          title: 'Distance',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y'
           }
         };
         var traces = new Array();
+        var tracesD = new Array();
         traces.push(trace1);
         traces.push(trace2);
-        traces.push(trace3);
+        tracesD.push(trace3);
         Plotly.newPlot($('#plotdiv')[0], traces, layout); 
+        Plotly.newPlot($('#plotDistance')[0], tracesD, layout2); 
         //addTraces               
         
       
@@ -248,6 +295,7 @@
 -->
         <h2>Live graph:</h2>
         <div id="plotdiv" style="width:600px;height:250px;"></div>
+        <div id="plotDistance" style="width:600px;height:250px;"></div>
 
       </div>
       <div id="tabs-3">
@@ -284,6 +332,7 @@
           <input type="submit" value="Send" id="file_submit">
         </form>
         <h2>Received:</h2>
+        <div id="filePlot" style="width:600px;height:250px;"></div>
         <div id="file_response"></div>
       
       </div>
