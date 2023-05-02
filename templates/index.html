@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
  <head>
-  <title>Flask-SocketIO Test</title>
+  <title>Sensors signal processing</title>
    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
    <link rel="stylesheet" href="static/libs/jquery-ui.min.css">
    <script src="static/libs/jquery-3.2.1.min.js"></script>
@@ -10,32 +10,34 @@
    <script src="static/libs/plotly-latest.min.js"></script>
    <script src="static/libs/gauge.min.js"></script>
    <script type="text/javascript" charset="utf-8">
-    let isOn = false;
+    let monitoringButton = false;
+    let clickCount = 0;
+    var socket;
+
      $(document).ready(function() {
        // data
-      console.log("READY")
-      namespace = '/test';
-      var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
-
+    $('#file_submit').prop('disabled', true);
+    console.log("READY")
+      socket = io.connect(location.protocol + '//' + document.domain + ':' + 80);
+    
+      console.log(location.protocol + '//' + document.domain + ':' + 80);
       socket.on('connect', function() {
-        socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
+      socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
       
-        socket.on('my_response', function(msg) {
-        console.log(msg.data);
-        if(isOn == true){
-          $('#json_response').append('JSON response: '+': '+JSON.stringify(msg.data, null,2)+'<br>').html; 
-          
-          //$('#log').append('Received '+': '+msg.data+'<br>').html(); 
-          }
-        });
-          
-      $('form#emit').submit(function(event) {
-          socket.emit('my_event', {value: $('#emit_value').val()});
-          return false; });
-      $('#buttonVal').click(function(event) {
-          console.log($('#buttonVal').val());
-          socket.emit('click_event', {value: $('#buttonVal').val()});
-          return false; });
+      $('#file_value').on('input', function(){
+      if($('#file_value').val() == ""){
+        $('#file_submit').prop('disabled', true);
+      }
+      else{
+        $('#file_submit').prop('disabled', false);
+      }});
+      
+      $('form#emitFile').submit(function(event) {
+        if($('#file_value').val() != null && $('#file_value').val() != ""){
+          console.log($('#file_value').val());
+          socket.emit('my_event', {value: $('#file_value').val()});
+          return false; }});
+        
       $('form#disconnect').submit(function(event) {
           socket.emit('disconnect_request');
           return false; });         
@@ -47,19 +49,16 @@
       var d = new Array();
       var trace;
       var layout;
-      
-      namespace = '/test';
-      var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
 
-      socket.on('connect', function() {
-        socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
 
+      socket.on('file_response', function(msg) {
+        console.log(msg);
+        $('#file_response').append('JSON response: '+': '+JSON.stringify(msg.data, null,2)+'<br>').html; 
+        
+        })
       socket.on('my_response', function(msg) {
         $('#json_response').append('JSON response: '+': '+JSON.stringify(msg.data, null,2)+'<br>').html; 
-        //graphData = JSON.parse(msg.data)
-        console.log(msg)
-        //console.log(msg.data);
-        //$('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html(); 
+        
         x.push(parseFloat(msg.count));
         t.push(parseFloat(msg.data.t));
         h.push(parseFloat(msg.data.h));
@@ -190,11 +189,17 @@
         });
       });
       
+      
       $( function() {
         $( "#tabs" ).tabs({
           event: "mouseover"
         });
       } );
+      
+      function sendMonitoringStatus(status) {
+        console.log(status);
+        socket.emit('monitoringButton', {'status': status});
+      };
     </script>
  </head>
 <header><h1>Sensors signal processing</h1></header>
@@ -221,7 +226,9 @@
         <form id="disconnect" method="POST" action="#">
           <input type="submit" value="Disconnect">
         </form> 
-        <button id="on">Start saving data</button>
+        <button onclick="sendMonitoringStatus('true')">Start monitoring</button>
+        <button onclick="sendMonitoringStatus('false')">Stop monitoring</button>
+        <p>Monitoring data automatically saves data to DB and file.</p>
         <h2>Received:</h2>
         <div id="json_response"></div>
       </div>
@@ -273,11 +280,11 @@
       <div id="tabs-5">
         <h2>Find by ID in file:</h2>
         <form id="emitFile" method="POST" action='#'>
-          <input type="text" name="emitFile_value" id="emitFile_value" placeholder="ID">
-          <input type="submit" value="Send">
+          <input type="text" name="file_value" id="file_value" placeholder="ID">
+          <input type="submit" value="Send" id="file_submit">
         </form>
         <h2>Received:</h2>
-        <div id="File_response"></div>
+        <div id="file_response"></div>
       
       </div>
     </div>
@@ -287,18 +294,4 @@
  </body>
 </html>
 
-<script type="text/javascript" charset="utf-8">
-  const button = document.getElementById('on');
-      let clickCount = 0;
-      button.addEventListener('click', () => {
-        clickCount++;
-        if (clickCount % 2 !== 0){
-          button.textContent = "Stop";
-          isOn = true;
-        }
-        else {
-          button.textContent = "Start saving data";
-          isOn = false;
-        }
-      });
-    </script>
+
