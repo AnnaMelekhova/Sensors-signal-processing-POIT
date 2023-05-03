@@ -12,29 +12,28 @@ import configparser as ConfigParser
 
 app = Flask(__name__)
 
-# config = ConfigParser.ConfigParser()
-# config.read('config.cfg')
-# myhost = config.get('mysqlDB', 'host')
-# myuser = config.get('mysqlDB', 'user')
-# mypasswd = config.get('mysqlDB', 'passwd')
-# mydb = config.get('mysqlDB', 'db')
-# print(myhost)
+config = ConfigParser.ConfigParser()
+config.read('config.cfg')
+myhost = config.get('mysqlDB', 'host')
+myuser = config.get('mysqlDB', 'user')
+mypasswd = config.get('mysqlDB', 'passwd')
+mydb = config.get('mysqlDB', 'db')
+print(myhost)
 
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 thread = None
 thread_lock = Lock() 
 
-ser = serial.Serial("/dev/ttyS0")
-ser.baudrate = 9600
-ser.flushInput()
+#ser = serial.Serial("/dev/ttyS0")
+#ser.baudrate = 9600
+#ser.flushInput()
 
 shouldMonitor = False       
 
 def background_thread(args):
     count = 0    
     dataCounter = 0
-    # db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
     dataList = []
     dataToSave = []
     state = False;
@@ -51,19 +50,18 @@ def background_thread(args):
             monitorBtn = False
           
         socketio.sleep(2)
-        count +=1
+        
         print(args)
         ###############SENSOR DATA#####################
-        line = ser.readline().decode('utf-8').rstrip()
-        data = json.loads(line)
+        #line = ser.readline().decode('utf-8').rstrip()
+        #data = json.loads(line)
         ###############SENSOR DATA#####################
         
         ###############TEST DATA######################
-        #f = open('dummydata.json')
-        #line = json.load(f)
-        #data = line[i]
+        f = open('dummydata.json')
+        line = json.load(f)
+        data = line[count]
         ###############TEST DATA######################
-        
         temp = data['temperature']
         hum = data['humidity']
         dist = data['distance']
@@ -81,29 +79,46 @@ def background_thread(args):
             print("zapisujem")
             dataToSave.append(dataDict)
             state = True
-        if state and not shouldMonitor:
-            print("ukladam do suboru")
-            state = False
-            i = i+1
-            f = open("data.txt", "a")
-            f.write("id: "+ str(i) +" - "+ json.dumps(dataToSave)+"\n")
-            f.close()
+        else:
+        #if state and not shouldMonitor:
+            #print("ukladam do suboru")
+            #state = False
+            #write_to_db(dataToSave)
+            #i = i+1
+            #f = open("data.txt", "a")
+            #f.write("id: "+ str(i) +" - "+ json.dumps(dataToSave)+"\n")
+            #f.close()
+            #dataToSave = []
+            
+            if len(dataToSave)>0 :
+                print(str(dataToSave))
+                l = str(dataToSave).replace("'", "\"")
+                write_to_db(l)
+                print("ukladam do suboru")
+                state = False
+                #write_to_db(dataToSave)
+                i = i+1
+                f = open("data.txt", "a")
+                f.write("id: "+ str(i) +" - "+ json.dumps(dataToSave)+"\n")
+                f.close()
             dataToSave = []
-			
-			
-			
-        
-        if len(dataList)>0:
-            print(str(dataList))
-            print(str(dataList).replace("'", "\""))
-             
+        count +=1
         socketio.emit('my_response',
                       {'data': dataDict, 'count': count})
         
         # if(saveDataNow == True): 
             # with open("data.json", "w") as f:
                 # json.dump(dataList, f)
-           
+
+def write_to_db(val):
+    db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+    print(val)
+    cursor = db.cursor()
+    cursor.execute("SELECT MAX(id) FROM graph")
+    cursor.execute("INSERT INTO graph (id, hodnoty) VALUES (%s, %s)",(0, val),)
+    print('___________________________ZAPISUJEM DO DB_________________________')
+    db.commit()
+
 def search_and_parse(index):
 	f = open("data.txt", "r")
 	for line in f:
