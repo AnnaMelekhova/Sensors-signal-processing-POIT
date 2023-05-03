@@ -75,6 +75,7 @@ def background_thread(args):
         dataList.append(dataDict)
         print(shouldMonitor)
         print(state)
+        print(select_from_table(5))
         if shouldMonitor or ir == 0:
             print("zapisujem")
             dataToSave.append(dataDict)
@@ -118,7 +119,23 @@ def write_to_db(val):
     cursor.execute("INSERT INTO graph (id, hodnoty) VALUES (%s, %s)",(0, val),)
     print('___________________________ZAPISUJEM DO DB_________________________')
     db.commit()
+    
+def select_from_table(idx):
+    db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM graph where id=%s",(idx,))
+    columns = [column[0] for column in cursor.description]
+    results = []
+    for row in cursor.fetchall():
+        results = (dict(zip(columns, row)))
+    data = results.get('hodnoty')
+    data = data.replace( '[', '')
+    data = data.replace( ']', '')
+    #print(data)
+    #print(type(data))
+    return data 
 
+    
 def search_and_parse(index):
 	f = open("data.txt", "r")
 	for line in f:
@@ -131,7 +148,7 @@ def search_and_parse(index):
 			return data
 	return []                      
                       
-                     
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -151,7 +168,15 @@ def test_message(message):
 	response = search_and_parse(int(message['value']))
 	emit('file_response',
          {'data': response})
- 
+
+@socketio.on('db_event')
+def test_message(message):  
+	if(message['value'] == ""): 
+		return
+	response = select_from_table(int(message['value']))
+	emit('DB_response',
+         {'data': response})
+
 @socketio.on('disconnect_request')
 def disconnect_request():
     session['receive_count'] = session.get('receive_count', 0) + 1
