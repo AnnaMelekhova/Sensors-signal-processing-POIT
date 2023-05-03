@@ -2,13 +2,13 @@
 			"temperature": 0.07,
 			"humidity": 49.94,
 			"distance": 61.93,
-			"ir": 1
+			"ir": 0
 		},
 		{
 			"temperature": 0.35,
 			"humidity": 58.82,
 			"distance": 91.07,
-			"ir": 1
+			"ir": 0
 		},
 		{
 			"temperature": 14.26,
@@ -26,13 +26,13 @@
 			"temperature": 6.91,
 			"humidity": 26.45,
 			"distance": 12.98,
-			"ir": 1
+			"ir": 0
 		},
 		{
 			"temperature": 2.23,
 			"humidity": 44.6,
 			"distance": 94.59,
-			"ir": 1
+			"ir": 0
 		},
 		{
 			"temperature": 3.64,

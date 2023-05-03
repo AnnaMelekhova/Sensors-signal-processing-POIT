@@ -37,6 +37,13 @@
           console.log($('#file_value').val());
           socket.emit('my_event', {value: $('#file_value').val()});
           return false; }});
+          
+          
+      $('form#emitDB').submit(function(event) {
+        if($('#emitDB_value').val() != null && $('#emitDB_value').val() != ""){
+          console.log($('#emitDB_value').val());
+          socket.emit('db_event', {value: $('#emitDB_value').val()});
+          return false; }});
         
       $('form#disconnect').submit(function(event) {
           socket.emit('disconnect_request');
@@ -49,7 +56,75 @@
       var d = new Array();
       var trace;
       var layout;
+    
+    
+    socket.on('DB_response', function(msg) {
+        document.getElementById("dbTable").innerHTML = "<tr><th>Time</th><th>Temperature</th><th>Humidity</th><th>Distance</th><th>Infrared</th></tr>";
+        //$('#file_response').html("");
+        //$('#file_response').append('JSON response: '+': '+JSON.stringify(msg.data, null,2)+'<br>').html; 
+        let dbParsed = JSON.parse(JSON.stringify(msg.data, null,2));
+        
+        const tbody = document.querySelector('#dbTable tbody');
 
+        // Loop through the data and create a row for each object
+        dbParsed.forEach(obj => {
+          const tr = document.createElement('tr');
+          const td1 = document.createElement('td');
+          const td2 = document.createElement('td');
+          const td3 = document.createElement('td');
+          const td4 = document.createElement('td');
+          const td5 = document.createElement('td');
+          td1.textContent = obj.time;
+          td2.textContent = obj.t;
+          td3.textContent = obj.h;
+          td4.textContent = obj.d;
+          td5.textContent = obj.ir;
+          tr.appendChild(td1);
+          tr.appendChild(td2);
+          tr.appendChild(td3);
+          tr.appendChild(td4);
+          tr.appendChild(td5);
+          tbody.appendChild(tr);
+        });
+        
+        const timeData = fileParsed.map((d) => d.time);
+        const tData = fileParsed.map((d) => d.t);
+        const hData = fileParsed.map((d) => d.h);
+        const dData = fileParsed.map((d) => d.d);
+        const irData = fileParsed.map((d) => d.ir);
+        
+        
+        trace1 = {
+            x: timeData,
+            y: tData,
+            name: 'temperature'
+        };  
+        trace2= {
+            x: timeData,
+            y: hData,
+            name: 'humidity'
+        };      
+        trace3= {
+            x: timeData,
+            y: dData,
+            name: 'distance'
+        };  
+        layout = {
+          title: 'Data',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y'
+          }
+        };
+        var traces = new Array();
+        traces.push(trace1);
+        traces.push(trace2);
+        traces.push(trace3);
+        Plotly.newPlot($('#dbPlot')[0], traces, layout); 
+        
+        })
 
       socket.on('file_response', function(msg) {
         document.getElementById("fileTable").innerHTML = "<tr><th>Time</th><th>Temperature</th><th>Humidity</th><th>Distance</th><th>Infrared</th></tr>";
@@ -385,10 +460,23 @@
         <h2>Find by ID in DB:</h2>
         <form id="emitDB" method="POST" action='#'>
           <input type="text" name="emitDB_value" id="emitDB_value" placeholder="ID">
-          <input type="submit" value="Send">
+          <input type="submit" value="Send" id="db_submitBtn">
         </form>
         <h2>Received:</h2>
-        <div id="DB_response"></div>
+        <div id="dbPlot" style="width:600px;height:250px;"></div>
+        <table id="dbTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Temperature</th>
+              <th>Humidity</th>
+              <th>Distance</th>
+              <th>Infrared</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
       
       </div>
       
@@ -421,5 +509,4 @@
   
  </body>
 </html>
-
 

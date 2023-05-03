@@ -25,9 +25,9 @@ socketio = SocketIO(app)
 thread = None
 thread_lock = Lock() 
 
-#ser = serial.Serial("/dev/ttyS0")
-#ser.baudrate = 9600
-#ser.flushInput()
+ser = serial.Serial("/dev/ttyS0")
+ser.baudrate = 9600
+ser.flushInput()
 
 shouldMonitor = False       
 
@@ -53,14 +53,14 @@ def background_thread(args):
         
         print(args)
         ###############SENSOR DATA#####################
-        #line = ser.readline().decode('utf-8').rstrip()
-        #data = json.loads(line)
+        line = ser.readline().decode('utf-8').rstrip()
+        data = json.loads(line)
         ###############SENSOR DATA#####################
         
         ###############TEST DATA######################
-        f = open('dummydata.json')
-        line = json.load(f)
-        data = line[count]
+        #f = open('dummydata.json')
+        #line = json.load(f)
+        #data = line[count]
         ###############TEST DATA######################
         temp = data['temperature']
         hum = data['humidity']
@@ -128,12 +128,17 @@ def select_from_table(idx):
     results = []
     for row in cursor.fetchall():
         results = (dict(zip(columns, row)))
-    data = results.get('hodnoty')
-    data = data.replace( '[', '')
-    data = data.replace( ']', '')
+    if results == []:
+        print("empty")
+    else:
+        data = results.get('hodnoty')
+        #data = data.replace( '[', '')
+        #data = data.replace( ']', '')
+        data = json.loads(data)
+        print(type(data))
     #print(data)
     #print(type(data))
-    return data 
+        return data 
 
     
 def search_and_parse(index):
@@ -141,8 +146,6 @@ def search_and_parse(index):
 	for line in f:
 		id_str, json_str = line.strip().split(' - ',1)
 		id_int = int(id_str.split(':')[1].strip())
-		print(id_int)
-		print(index)
 		if id_int == index:
 			data = json.loads(json_str)
 			return data
@@ -170,10 +173,11 @@ def test_message(message):
          {'data': response})
 
 @socketio.on('db_event')
-def test_message(message):  
+def testdb_message(message):  
 	if(message['value'] == ""): 
 		return
 	response = select_from_table(int(message['value']))
+	print(response)
 	emit('DB_response',
          {'data': response})
 
